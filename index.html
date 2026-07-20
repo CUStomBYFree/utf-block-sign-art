@@ -4,7 +4,9 @@
 <head>
   <meta charset="UTF-8" name="viewport" content="width=device-width" />
   <title>方块字告示牌生成器</title>
-  <link rel="icon" href="Oak_Sign.png" type="image/png" />
+  <link rel="icon" href="sign.webp" type="image/webp" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="fonts/fonts.css" />
 </head>
 
 <body>
@@ -12,7 +14,7 @@
   <div id="leftPanel">
     <label id="inputWrapper">
       输入文字：
-      <textarea class="autoWidth" placeholder="在此输入文字...">测试&#10;Test</textarea>
+      <textarea class="autoWidth" placeholder="在此输入文字...">←换乘 1 号线&#10;←To Line 1</textarea>
     </label>
     <div class="config-section">
       <div class="config-label">配置：</div>
@@ -21,14 +23,14 @@
         <div class="config-item">
           <label class="config-item-label">告示牌类型</label>
           <div class="config-item-content">
-            <label class="radio-option" style="flex-direction:row; gap:6px; padding:6px 12px;">
+            <label class="radio-option radio-option-image">
               <input type="radio" class="signType" name="signType" value="sign" checked />
-              <img src="Oak_Sign.png" alt="告示牌" style="width:2em; height:2em;" />
+              <img src="sign.webp" alt="告示牌" />
               <span>告示牌</span>
             </label>
-            <label class="radio-option" style="flex-direction:row; gap:6px; padding:6px 12px;">
+            <label class="radio-option radio-option-image">
               <input type="radio" class="signType" name="signType" value="hangingSign" />
-              <img src="Oak_Hanging_Sign.png" alt="悬挂式告示牌" style="width:2em; height:2em;" />
+              <img src="hanging-sign.webp" alt="悬挂式告示牌" />
               <span>悬挂式告示牌</span>
             </label>
           </div>
@@ -37,17 +39,26 @@
         <!-- 字体选择 -->
         <div class="config-item">
           <label class="config-item-label">字体</label>
-          <select id="fontSelect" class="config-select">
-            <option value="寒蝉点阵体" style="font-family: '寒蝉点阵体', monospace;">寒蝉点阵体（默认）</option>
-            <option value="精品点阵体" style="font-family: '精品点阵体', monospace;">精品点阵体</option>
-            <option value="丁卯点阵体" style="font-family: '丁卯点阵体', monospace;">丁卯点阵体（试用）</option>
-            <option value="全小素" style="font-family: '全小素', monospace;">全小素</option>
-            <option value="缝合像素字体" style="font-family: '缝合像素字体', monospace;">缝合像素字体</option>
-            <option value="观致点阵体" style="font-family: '观致点阵体', monospace;">观致点阵体</option>
-            <option value="美咲哥特体" style="font-family: '美咲哥特体', monospace;">美咲哥特体</option>
-            <option value="美咲明朝体" style="font-family: '美咲明朝体', monospace;">美咲明朝体</option>
-            <option value="甜橙点阵体" style="font-family: '甜橙点阵体', monospace;">甜橙点阵体</option>
-          </select>
+          <div id="fontSelect" class="custom-select">
+            <div class="custom-select-trigger">
+              <span id="fontSelectText">Chill Bitmap 7px</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+            <div class="custom-select-dropdown">
+              <div class="custom-select-option" data-value="Chill Bitmap 7px" style="font-family: 'Chill Bitmap 7px', monospace;">Chill Bitmap 7px</div>
+              <div class="custom-select-option" data-value="精品點陣體7×7 1.71" style="font-family: '精品點陣體7×7 1.71', monospace;">精品點陣體7×7 1.71</div>
+              <div class="custom-select-option" data-value="QuanPixel 8px" style="font-family: 'QuanPixel 8px', monospace;">QuanPixel 8px</div>
+              <div class="custom-select-option" data-value="Fusion Pixel 8px Proportional" style="font-family: 'Fusion Pixel 8px Proportional', monospace;">Fusion Pixel 8px Proportional</div>
+              <div class="custom-select-option" data-value="Fusion Pixel 8px Monospaced" style="font-family: 'Fusion Pixel 8px Monospaced', monospace;">Fusion Pixel 8px Monospaced</div>
+              <div class="custom-select-option" data-value="GuanZhi" style="font-family: 'GuanZhi', monospace;">GuanZhi</div>
+              <div class="custom-select-option" data-value="美績點陣體" style="font-family: '美績點陣體', monospace;">美績點陣體</div>
+              <div class="custom-select-option" data-value="美績點陣體 - 明" style="font-family: '美績點陣體 - 明', monospace;">美績點陣體 - 明</div>
+              <div class="custom-select-divider"></div>
+              <input id="fontCustomInput" class="custom-select-input" type="text" placeholder="输入自定义字体..." />
+            </div>
+          </div>
         </div>
 
         <!-- 自定义字符 -->
@@ -56,42 +67,36 @@
           <div class="config-item-content">
             <label class="radio-option">
               <input type="radio" onclick="setCharSet('1.0')" class="gameVersion" name="gameVersion"
-                value="1.0" />
-              <span><span class="char-symbol">▙</span> 窄体（旧版）</span>
+                value="1.0" checked />
+              <span><span class="char-symbol">▙</span> 常规 1.19</span>
             </label>
             <label class="radio-option">
               <input type="radio" onclick="setCharSet('1.0-new')" class="gameVersion" name="gameVersion"
                 value="1.0-new" />
-              <span><span class="char-symbol">◙◛</span> 窄体（新版）</span>
+              <span><span class="char-symbol">◙◛</span> 常规 1.19.4+</span>
             </label>
             <label class="radio-option">
               <input type="radio" onclick="setCharSet('1.20')" class="gameVersion" name="gameVersion"
-                value="1.20" checked />
-              <span><span class="char-symbol">█▄</span> 宽体</span>
+                value="1.20" />
+              <span><span class="char-symbol">█▄</span> 宽体 1.20</span>
             </label>
-            <button type="button" onclick="toggleCustomCharModal()" class="config-btn">自定义</button>
+            <button type="button" onclick="toggleCustomCharSection()" class="config-btn">自定义</button>
+          </div>
+          <div id="customCharSection" class="custom-char-section">
+            <div id="customCharWrapper"></div>
+            <template id="customCharTemplate">
+              <label>
+                <code></code>
+                <input name="customChar" value="" />
+              </label>
+            </template>
           </div>
         </div>
 
-        <!-- 复制版本 -->
-        <div class="config-item">
-          <label class="config-item-label">复制版本</label>
-          <div class="config-item-content">
-            <label class="radio-option" style="flex-direction:row; gap:6px; padding:6px 12px;">
-              <input type="radio" class="copyEdition" name="copyEdition" value="je" checked />
-              <img src="Java_Edition.webp" alt="Java版" style="width:2em; height:2em;" />
-              <span>Java版</span>
-            </label>
-            <label class="radio-option" style="flex-direction:row; gap:6px; padding:6px 12px;">
-              <input type="radio" class="copyEdition" name="copyEdition" value="be" />
-              <img src="Bedrock_Edition.webp" alt="基岩" style="width:2em; height:2em;" />
-              <span>基岩版</span>
-            </label>
-          </div>
-        </div>
+
       </div>
     </div>
-    <button type="button" onclick="main()" style="padding: 12px 30px; font-size: 1.1em; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 25px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">绘制</button>
+    <button type="button" onclick="main()" class="btn-primary">绘制</button>
   </div>
   <div id="rightPanel">
     <div id="previewWrapper">
@@ -99,887 +104,13 @@
       <div id="canvasWrapper"></div>
     </div>
     <div id="outputWrapper">
-      <div style="color: #fff; font-weight: 600; font-size: 1.1em; margin-bottom: 10px;">输出结果</div>
+      <div class="output-title">输出结果</div>
       <div id="signsWrapper"></div>
     </div>
   </div>
 
-  <!-- 自定义字符弹窗 -->
-  <div id="customCharModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>自定义字符</h3>
-        <button class="close-btn" onclick="toggleCustomCharModal()">×</button>
-      </div>
-      <div class="modal-body">
-        <div id="customCharWrapper">
-        </div>
-        <template id="customCharTemplate">
-          <label>
-            <code></code>
-            <input name="customChar" value="" />
-          </label>
-        </template>
-      </div>
-    </div>
-  </div>
+  <script src="char.js"></script>
+  <script src="main.js"></script>
 </body>
-
-<script>
-  const customChars = {
-    "1.19": ["  ", " ▗", "▖ ", "▄", " ▝", " ▐", "▞", "▟", "▘ ", "▚", "▌ ", "▙", "▀", "▜", "▛", "█"],
-    "1.19-new": ["  ", " ◛", "◛ ", "◛◛", " ◚", " ◙", "◛◚", "◛◙", "◚ ", "◚◛", "◙ ", "◙◛", "◚◚", "◚◙", "◙◚", "◙◙"],
-    "1.20": ["    ", "  ▄", "▄  ", "▄▄", "  ▀", "  █", "▄▀", "▄█", "▀  ", "▀▄", "█  ", "█▄", "▀▀", "▀█", "█▀", "██"],
-  }
-  // 用户自定义字符存储
-  let userCustomChars = {
-    "1.19": null,
-    "1.19-new": null,
-    "1.20": null,
-  };
-  let currentCharState = { gameVersion: "1.20" };
-
-  function getCharStorageKey(gameVersion) {
-    if (gameVersion === "1.0") return "1.19";
-    if (gameVersion === "1.0-new") return "1.19-new";
-    return "1.20";
-  }
-
-  function saveCurrentCustomChars() {
-    const key = getCharStorageKey(currentCharState.gameVersion);
-    userCustomChars[key] = getCustomChar();
-  }
-
-  function loadCharSet(gameVersion) {
-    saveCurrentCustomChars();
-    currentCharState = { gameVersion };
-    const key = getCharStorageKey(gameVersion);
-    const chars = userCustomChars[key] || customChars[key];
-    setCustomChar(chars);
-  }
-
-  let customChar;
-  setCustomChar(customChars["1.20"]);
-
-  // 预加载所有字体
-  const fontsToLoad = [
-    '寒蝉点阵体',
-    '精品点阵体',
-    '丁卯点阵体',
-    '全小素',
-    '缝合像素字体',
-    '观致7x7',
-    'MisekiBitmap',
-    'MisekiBitmapMincho',
-    '甜橙点阵体'
-  ];
-  
-  fontsToLoad.forEach(fontName => {
-    document.fonts.load(`8px '${fontName}'`);
-  });
-
-  // 监听告示牌类型切换，悬挂告示牌强制窄体
-  document.querySelectorAll(".signType").forEach(radio => {
-    radio.addEventListener('change', function() {
-      const wideCharInput = document.querySelector('input[name="gameVersion"][value="1.20"]');
-      const wideCharLabel = wideCharInput.closest('.radio-option');
-      const narrowInputs = document.querySelectorAll('input[name="gameVersion"][value="1.0"], input[name="gameVersion"][value="1.0-new"]');
-      
-      if (this.value === "hangingSign") {
-        wideCharLabel.style.opacity = "0.4";
-        wideCharLabel.style.pointerEvents = "none";
-        wideCharInput.disabled = true;
-        if (wideCharInput.checked) {
-          narrowInputs[0].checked = true;
-          loadCharSet("1.0");
-        }
-      } else {
-        wideCharLabel.style.opacity = "";
-        wideCharLabel.style.pointerEvents = "";
-        wideCharInput.disabled = false;
-      }
-    });
-  });
-
-
-  // 自定义字符弹窗控制
-  function toggleCustomCharModal() {
-    const modal = document.getElementById('customCharModal');
-    if (modal.style.display === 'block') {
-      modal.style.display = 'none';
-    } else {
-      modal.style.display = 'block';
-    }
-  }
-
-  // 点击弹窗外部关闭
-  document.getElementById('customCharModal').addEventListener('click', function(event) {
-    if (event.target === this) {
-      toggleCustomCharModal();
-    }
-  });
-
-  // 监听字体选择变化，更新输入框字体
-  document.querySelector("#fontSelect").addEventListener('change', function() {
-    const selectedFont = this.value;
-    const textarea = document.querySelector("#inputWrapper > textarea");
-    textarea.style.fontFamily = `'${selectedFont}'`;
-  });
-
-  function setCharSet(gameVersion) {
-    loadCharSet(gameVersion);
-  }
-
-  function setCustomChar(customChar) {
-    const customCharWrapper = document.querySelector("#customCharWrapper");
-    const customCharTemplate = document.querySelector("#customCharTemplate");
-    customCharWrapper.innerHTML = "";
-    customChar.forEach((char, index) => {
-      const charName = index.toString(2).padStart(4, "0");
-      const dom = customCharTemplate.content.cloneNode(true);
-      dom.querySelector("code").textContent = `0b${charName}`;
-      const dom_input = dom.querySelector("input");
-      dom_input.id = `customChar_0b${charName}`;
-      dom_input.value = char;
-      customCharWrapper.appendChild(dom);
-    });
-  }
-
-  function getCustomChar() {
-    const inputs = document.querySelectorAll("#customCharWrapper input[name='customChar']");
-    const result = [];
-    inputs.forEach(input => {
-      result.push(input.value);
-    });
-    return result;
-  }
-</script>
-
-<script>
-  function main() {
-    const selectedFont = document.querySelector("#fontSelect").value;
-    const inputText = document.querySelector("#inputWrapper > textarea").value;
-    const isHangingSign = document.querySelector(".signType:checked").value == "hangingSign";
-    const gameVersion = document.querySelector(".gameVersion:checked").value;
-    const copyEdition = document.querySelector(".copyEdition:checked").value;
-    customChar = getCustomChar();
-
-    const canvases = text2canvases(inputText, isHangingSign, gameVersion, selectedFont);
-    const signs = canvases2signs(canvases);
-
-    const signsWrapper = document.querySelector("#signsWrapper");
-    const canvasWrapper = document.querySelector("#canvasWrapper");
-
-    renderCanvases(canvases, canvasWrapper);
-    renderSigns(signs, signsWrapper, copyEdition);
-  }
-
-  function text2canvases(text, isHangingSign, gameVersion, fontName) {
-    let canvases = [];
-    const paragraphs = text.replace(/\r/g, '').split('\n');
-    for (const para of paragraphs) {
-      let textArray = Array.from(para);
-      while (textArray.length) {
-        let canvas = newCanvas(isHangingSign, gameVersion, fontName);
-        let ctx = canvas.getContext("2d");
-        let widthUsed = 0;
-        let widthCharNext = 0;
-        do {
-          let Char = textArray.shift();
-          ctx.fillText(Char, widthUsed, canvas.height - 1);
-          widthUsed += ctx.measureText(Char).width;
-          if (!textArray.length) break;
-          widthCharNext = ctx.measureText(textArray[0]).width;
-        } while (widthUsed + widthCharNext <= canvas.width);
-        canvases.push(canvas);
-      }
-    }
-    return canvases;
-
-    function newCanvas(isHangingSign, gameVersion, fontName) {
-      let canvas = document.createElement("canvas");
-      canvas.className = "previewCanvas";
-      canvas.height = 8;
-      
-      if (isHangingSign) {
-        canvas.width = 12;
-      } else if (gameVersion === "1.20") {
-        canvas.width = 10;
-      } else {
-        canvas.width = 20;
-      }
-      
-      let ctx = canvas.getContext("2d");
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#000";
-      ctx.font = `8px '${fontName}'`;
-      return canvas;
-    }
-  }
-
-  function canvases2signs(canvases) {
-    let signs = [];
-
-    canvases.forEach(canvas => {
-      let canvasData = Array.from(new Array(canvas.height), () => new Array(canvas.width));
-      let sign = Array.from(new Array(canvas.height / 2), () => new Array(canvas.width / 2));
-
-      let ctx = canvas.getContext("2d");
-      let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-
-      for (let y = 0; y < canvas.height; y++) {
-        for (let x = 0; x < canvas.width; x++) {
-          let i = (y * canvas.width + x) * 4;
-          const R = imgData[i];
-          const G = imgData[i + 1];
-          const B = imgData[i + 2];
-          let pixel = ((R + G + B) / 3 < 127) ? 1 : 0;
-
-          canvasData[y][x] = pixel;
-          if (y % 2 && x % 2) {
-            let p1 = canvasData[y - 1][x - 1],
-              p2 = canvasData[y - 1][x],
-              p3 = canvasData[y][x - 1];
-            sign[(y - 1) / 2][(x - 1) / 2] = customChar[(p1 << 3) | (p2 << 2) | (p3 << 1) | pixel];
-          }
-        }
-      }
-      sign = sign.map(e => e.join(""));
-      signs.push(sign);
-    });
-    return signs;
-  }
-
-  function renderCanvases(canvases, wrapper) {
-    wrapper.innerHTML = "";
-    canvases.forEach(canvas => {
-      wrapper.appendChild(canvas);
-    });
-  }
-
-  function renderSigns(signs, wrapper, copyEdition) {
-    wrapper.innerHTML = "";
-    signs.forEach(sign => {
-      let signElement = document.createElement("div");
-      signElement.className = "sign";
-
-      if (copyEdition === "je") {
-        sign.forEach(signLineText => {
-          let lineContainer = document.createElement("div");
-          lineContainer.className = "signLineContainer";
-          
-          let signLineElement = document.createElement("pre");
-          signLineElement.className = "signLine";
-          signLineElement.innerText = signLineText;
-          lineContainer.appendChild(signLineElement);
-
-          let copyButton = document.createElement("button");
-          copyButton.className = "lineCopyButton";
-          copyButton.innerText = "↺";
-          copyButton.title = "复制";
-          copyButton.style.cssText = "font-size:1.1em;line-height:1;padding:0 8px;margin:0 0 0 4px;border:none;background:#667eea;color:#fff;cursor:pointer;border-radius:3px;font-weight:600;min-width:0;min-height:0;width:auto;height:auto;align-self:stretch;display:flex;align-items:center;justify-content:center;";
-          copyButton.addEventListener("click", () => {
-            try {
-              let text = signLineText;
-              if ((text.match(/[◙◛◚]/g) || []).length >= 11) {
-                text = text.replace(/ $/, '');
-              }
-              copyToClipboard(text);
-            } catch (err) {
-              window.alert("复制失败: " + err);
-            }
-          });
-          lineContainer.appendChild(copyButton);
-
-          signElement.appendChild(lineContainer);
-        });
-      } else {
-        sign.forEach(signLineText => {
-          let signLineElement = document.createElement("pre");
-          signLineElement.className = "signLine";
-          signLineElement.innerText = signLineText;
-          signElement.appendChild(signLineElement);
-        });
-
-        let copyButton = document.createElement("button");
-        copyButton.innerText = "复制";
-        copyButton.addEventListener("click", () => {
-          try {
-            copyToClipboard(sign.join("\n"));
-          } catch (err) {
-            window.alert("复制失败: " + err);
-          }
-        });
-        signElement.appendChild(copyButton);
-      }
-
-      wrapper.appendChild(signElement);
-    });
-  }
-
-  function showToast(message) {
-    const existingToast = document.querySelector('.toast');
-    if (existingToast) {
-      existingToast.remove();
-    }
-
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.textContent = message;
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-      toast.remove();
-    }, 3000);
-  }
-
-  function copyToClipboard(text) {
-    const clipboard = navigator.clipboard;
-    if (clipboard) {
-      clipboard.writeText(text).then(() => {
-        showToast('复制成功！');
-      }).catch(() => {
-        execCommandCopyToClipboard();
-      });
-    }
-    else {
-      execCommandCopyToClipboard();
-    }
-
-    function execCommandCopyToClipboard() {
-      let textArea = document.createElement("textArea");
-      textArea.style.position = "fixed";
-      textArea.setAttribute("readonly", "readonly");
-      textArea.value = text;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("Copy");
-      textArea.remove();
-      showToast('复制成功！');
-    }
-  }
-</script>
-
-<style>
-  @font-face {
-    font-family: "寒蝉点阵体";
-    src: url("ChillBitmap7x.ttf") format("truetype");
-  }
-  @font-face {
-    font-family: "精品点阵体";
-    src: url("BoutiqueBitmap7x7_1.71.ttf") format("truetype");
-  }
-  @font-face {
-    font-family: "丁卯点阵体";
-    src: url("DinkieBitmap7pxDemo.ttf") format("truetype");
-  }
-  @font-face {
-    font-family: "全小素";
-    src: url("QuanPixel8px.ttf") format("truetype");
-  }
-  @font-face {
-    font-family: "缝合像素字体";
-    src: url("FusionPixel8pxProportional.ttf") format("truetype");
-  }
-  @font-face {
-    font-family: "观致点阵体";
-    src: url("GuanZhiBitmap.ttf") format("truetype");
-  }
-  @font-face {
-    font-family: "美咲哥特体";
-    src: url("MisekiBitmap.ttf") format("truetype");
-  }
-  @font-face {
-    font-family: "美咲明朝体";
-    src: url("MisekiBitmapMincho.ttf") format("truetype");
-  }
-  @font-face {
-    font-family: "甜橙点阵体";
-    src: url("TianChengBit-Regular.otf") format("opentype");
-  }
-
-  * {
-    box-sizing: border-box;
-  }
-
-  body,
-  button {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    font-size: large;
-    line-height: 2;
-  }
-
-  #customCharWrapper {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    max-height: 400px;
-    overflow-y: auto;
-  }
-
-  #customCharWrapper label {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    padding: 8px;
-    background: #fff;
-    border-radius: 6px;
-    border: 1px solid #e0e0e0;
-    text-align: center;
-  }
-
-  #customCharWrapper code {
-    font-family: monospace;
-    font-size: 0.85em;
-    color: #666;
-  }
-
-  #customCharWrapper input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 1.2em;
-    text-align: center;
-    box-sizing: border-box;
-  }
-
-  #customCharWrapper input:focus {
-    outline: none;
-    border-color: #667eea;
-  }
-
-  body {
-    width: 100%;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 15px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-  }
-
-  h1 {
-    grid-column: span 2;
-    font-weight: 700;
-    line-height: 1.3;
-    margin: 0;
-    color: #fff;
-    text-align: center;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-    font-size: 1.8em;
-  }
-
-  #leftPanel {
-    display: flex;
-    flex-direction: column;
-    gap: 1em;
-  }
-
-  #rightPanel {
-    display: flex;
-    flex-direction: column;
-    gap: 1em;
-  }
-
-  .autoWidth {
-    width: 100%;
-    border-radius: 8px;
-    padding: 12px;
-    box-sizing: border-box;
-  }
-
-  #inputWrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    color: #fff;
-    font-weight: 600;
-    font-size: 1.1em;
-  }
-
-  #inputWrapper textarea {
-    font-size: 1.2em;
-    font-family: "寒蝉点阵体", "精品点阵体", "丁卯点阵体", "全小素", "缝合像素字体", "观致7x7", "MisekiBitmap", "MisekiBitmapMincho", "甜橙点阵体", monospace;
-    resize: vertical;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-radius: 8px;
-    padding: 12px;
-    background: rgba(255,255,255,0.95);
-    transition: all 0.3s ease;
-    min-height: 80px;
-  }
-
-  #inputWrapper textarea:focus {
-    outline: none;
-    border-color: #fff;
-    box-shadow: 0 0 20px rgba(255,255,255,0.3);
-  }
-
-  #configWrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 1em;
-    padding: 15px;
-    background: rgba(255,255,255,0.95);
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-  }
-
-  .config-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5em;
-  }
-
-  .config-label {
-    color: #fff;
-    font-weight: 600;
-    font-size: 1.1em;
-  }
-
-  .config-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5em;
-    padding-bottom: 1em;
-    border-bottom: 1px solid #eee;
-  }
-
-  .config-item:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-  }
-
-  .config-item-label {
-    font-weight: 600;
-    color: #333;
-    font-size: 0.95em;
-  }
-
-  .config-item-content {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.7em;
-    align-items: center;
-  }
-
-  .radio-option {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    cursor: pointer;
-    padding: 8px 16px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    border: 2px solid #e0e0e0;
-    background: #fff;
-  }
-
-  .radio-option:hover {
-    border-color: #667eea;
-    background: #f5f5f5;
-  }
-
-  .radio-option input[type="radio"] {
-    display: none;
-  }
-
-  .radio-option img {
-    width: 2.5em;
-    height: 2.5em;
-    image-rendering: pixelated;
-    border-radius: 6px;
-    background: #f0f0f0;
-  }
-
-  .radio-option span {
-    font-size: 0.9em;
-    color: #666;
-    font-weight: 500;
-  }
-
-  .char-symbol {
-    font-size: 1.2em;
-    margin-right: 4px;
-  }
-
-  .radio-option:has(input[type="radio"]:checked) {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-color: #667eea;
-    color: #fff;
-  }
-
-  .radio-option:has(input[type="radio"]:checked) span {
-    color: #fff;
-  }
-
-  .radio-option:has(input[type="radio"]:checked) img {
-    box-shadow: 0 0 12px rgba(102, 126, 234, 0.5);
-    border: 2px solid #667eea;
-  }
-
-  .config-select {
-    padding: 10px 15px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    font-size: 1em;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    background: #fff;
-    font-family: "寒蝉点阵体", "精品点阵体", "丁卯点阵体", "全小素", "缝合像素字体", "观致点阵体", "美咲哥特体", "美咲明朝体", "甜橙点阵体", monospace;
-  }
-
-  .config-select:focus {
-    outline: none;
-    border-color: #667eea;
-  }
-
-  .config-btn {
-    padding: 8px 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    background: #fff;
-    font-weight: 500;
-    color: #666;
-    font-size: 0.9em;
-  }
-
-  .config-btn:hover {
-    border-color: #667eea;
-    color: #667eea;
-  }
-
-  #previewWrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  #previewWrapper>div:first-child {
-    font-weight: 600;
-    color: #fff;
-    font-size: 1.1em;
-  }
-
-  .previewCanvas {
-    height: 4em;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-radius: 8px;
-    image-rendering: pixelated;
-    background: #fff;
-  }
-
-  #signsWrapper {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    justify-content: flex-start;
-  }
-
-  .signLine {
-    line-height: 1;
-    font-size: 1.3em;
-    margin: 0;
-    -webkit-user-select: all;
-    user-select: all;
-    border: 1px dashed rgba(255,255,255,0.5);
-    text-align: center;
-    overflow: hidden;
-    background: #2c2c2c;
-    color: #fff;
-    padding: 6px;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .signLineContainer {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    background: #2c2c2c;
-  }
-
-  .lineCopyButton {
-    padding: 0;
-    border: none;
-    background: none;
-    color: #aaa;
-    cursor: pointer;
-    font-weight: 400;
-    font-size: 10px;
-    line-height: 1;
-    white-space: nowrap;
-    flex-shrink: 0;
-    margin-left: 2px;
-  }
-
-  .lineCopyButton:hover {
-    color: #667eea;
-  }
-
-  .sign {
-    border: 2px solid #e0e0e0;
-    margin-right: 5px;
-    display: inline-block;
-    border-radius: 8px;
-    overflow: hidden;
-    background: #fff;
-    min-width: 200px;
-  }
-
-  .sign button {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    background: #667eea;
-    color: #fff;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    font-size: 1em;
-  }
-
-  button:hover {
-    background: #764ba2;
-  }
-
-  button:active {
-    transform: scale(0.98);
-  }
-
-  .sign button:hover {
-    background: #764ba2;
-  }
-
-  .sign button:active {
-    transform: scale(0.98);
-  }
-
-  @media (max-width: 900px) {
-    body {
-      padding: 10px;
-      max-width: 100%;
-      grid-template-columns: 1fr;
-    }
-
-    h1 {
-      grid-column: span 1;
-      font-size: 1.3em;
-    }
-
-    #inputWrapper textarea {
-      font-size: 1em;
-    }
-
-    .signLine {
-      font-size: 1.1em;
-    }
-
-    #configWrapper {
-      padding: 12px;
-      grid-template-columns: 1fr;
-    }
-
-    #signsWrapper {
-      justify-content: center;
-    }
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .sign {
-    animation: fadeIn 0.3s ease;
-  }
-
-  .toast {
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.8);
-    color: #fff;
-    padding: 12px 24px;
-    border-radius: 25px;
-    font-size: 1em;
-    z-index: 1000;
-    animation: fadeIn 0.3s ease;
-  }
-
-  .modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.5);
-  }
-
-  .modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 600px;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    animation: fadeIn 0.3s ease;
-  }
-
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
-  }
-
-  .modal-header h3 {
-    margin: 0;
-    color: #333;
-  }
-
-  .close-btn {
-    background: none;
-    border: none;
-    font-size: 1.5em;
-    cursor: pointer;
-    color: #999;
-    transition: color 0.3s ease;
-  }
-
-  .close-btn:hover {
-    color: #333;
-  }
-
-  .modal-body {
-    max-height: 400px;
-    overflow-y: auto;
-  }
-</style>
 
 </html>
