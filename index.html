@@ -12,94 +12,118 @@
 <body>
   <h1>方块字告示牌生成器</h1>
   <div id="leftPanel">
-    <label id="inputWrapper">
-      输入文字：
-      <textarea class="autoWidth" placeholder="在此输入文字...">←换乘 1 号线&#10;←To Line 1</textarea>
-    </label>
     <div class="config-section">
-      <div class="config-label">配置：</div>
-      <div id="configWrapper">
-        <!-- 告示牌类型 -->
-        <div class="config-item">
-          <label class="config-item-label">告示牌类型</label>
-          <div class="config-item-content">
-            <label class="radio-option radio-option-image">
-              <input type="radio" class="signType" name="signType" value="sign" checked />
-              <img src="sign.webp" alt="告示牌" />
-              <span>告示牌</span>
-            </label>
-            <label class="radio-option radio-option-image">
-              <input type="radio" class="signType" name="signType" value="hangingSign" />
-              <img src="hanging-sign.webp" alt="悬挂式告示牌" />
-              <span>悬挂式告示牌</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- 字体选择 -->
-        <div class="config-item">
-          <label class="config-item-label">字体</label>
-          <div id="fontSelect" class="custom-select">
-            <div class="custom-select-trigger">
-              <span id="fontSelectText">Chill Bitmap 7px</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </div>
-            <div class="custom-select-dropdown">
-              <div class="custom-select-option" data-value="Chill Bitmap 7px" style="font-family: 'Chill Bitmap 7px', monospace;">Chill Bitmap 7px</div>
-              <div class="custom-select-option" data-value="精品點陣體7×7 1.71" style="font-family: '精品點陣體7×7 1.71', monospace;">精品點陣體7×7 1.71</div>
-              <div class="custom-select-option" data-value="QuanPixel 8px" style="font-family: 'QuanPixel 8px', monospace;">QuanPixel 8px</div>
-              <div class="custom-select-option" data-value="Fusion Pixel 8px Proportional" style="font-family: 'Fusion Pixel 8px Proportional', monospace;">Fusion Pixel 8px Proportional</div>
-              <div class="custom-select-option" data-value="Fusion Pixel 8px Monospaced" style="font-family: 'Fusion Pixel 8px Monospaced', monospace;">Fusion Pixel 8px Monospaced</div>
-              <div class="custom-select-option" data-value="GuanZhi" style="font-family: 'GuanZhi', monospace;">GuanZhi</div>
-              <div class="custom-select-option" data-value="美績點陣體" style="font-family: '美績點陣體', monospace;">美績點陣體</div>
-              <div class="custom-select-option" data-value="美績點陣體 - 明" style="font-family: '美績點陣體 - 明', monospace;">美績點陣體 - 明</div>
-              <div class="custom-select-divider"></div>
-              <input id="fontCustomInput" class="custom-select-input" type="text" placeholder="输入自定义字体..." />
-            </div>
-          </div>
-        </div>
-
-        <!-- 自定义字符 -->
-        <div class="config-item">
-          <label class="config-item-label">字符模式</label>
-          <div class="config-item-content">
-            <label class="radio-option">
-              <input type="radio" onclick="setCharSet('1.0')" class="gameVersion" name="gameVersion"
-                value="1.0" checked />
-              <span><span class="char-symbol">▞</span> 常规 1.19</span>
-            </label>
-            <label class="radio-option">
-              <input type="radio" onclick="setCharSet('1.0-new')" class="gameVersion" name="gameVersion"
-                value="1.0-new" />
-              <span><span class="char-symbol">◛◚</span> 常规 1.19.4+</span>
-            </label>
-            <label class="radio-option">
-              <input type="radio" onclick="setCharSet('1.20')" class="gameVersion" name="gameVersion"
-                value="1.20" />
-              <span><span class="char-symbol">▄▀</span> 宽体 1.20</span>
-            </label>
-            <label class="radio-option">
-              <input type="radio" onclick="setCharSet('braille')" class="gameVersion" name="gameVersion"
-                value="braille" />
-              <span><span class="char-symbol">⣤⠛</span> 盲文</span>
-            </label>
-            <button type="button" onclick="toggleCustomCharSection()" class="config-btn">自定义</button>
-          </div>
-          <div id="customCharSection" class="custom-char-section">
-            <div id="customCharWrapper"></div>
-            <template id="customCharTemplate">
-              <label>
-                <code></code>
-                <input name="customChar" value="" />
-              </label>
-            </template>
-          </div>
-        </div>
-
-
+      <div class="config-item">
+        <label class="config-item-label">输入文字</label>
+        <textarea class="autoWidth" placeholder="在此输入文字...">←换乘 1 号线&#10;←To Line 1</textarea>
       </div>
+
+      <!-- Minecraft版本 -->
+      <div class="config-item">
+        <label class="config-item-label">Minecraft版本</label>
+        <div class="config-item-content">
+          <label class="radio-option">
+            <input type="radio" class="edition" name="edition" value="je" checked />
+            <img src="edition-je.webp" alt="Java版" />
+            <span>Java版</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" class="edition" name="edition" value="be" />
+            <img src="edition-be.webp" alt="基岩版" />
+            <span>基岩版</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 告示牌类型 -->
+      <div class="config-item">
+        <label class="config-item-label">告示牌类型</label>
+        <div class="config-item-content">
+          <label class="radio-option">
+            <input type="radio" class="signType" name="signType" value="sign" checked />
+            <img src="signType-sign.webp" alt="告示牌" />
+            <span>告示牌</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" class="signType" name="signType" value="hangingSign" />
+            <img src="signType-hangingSign.webp" alt="悬挂式告示牌" />
+            <span>悬挂式告示牌</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 字体选择 -->
+      <div class="config-item">
+        <label class="config-item-label">字体</label>
+        <div id="fontSelect" class="custom-select">
+          <div class="custom-select-trigger">
+            <span id="fontSelectText">Chill Bitmap 7px</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="custom-select-dropdown">
+            <div class="custom-select-option" data-value="Chill Bitmap 7px"
+              style="font-family: 'Chill Bitmap 7px', monospace;">Chill Bitmap 7px</div>
+            <div class="custom-select-option" data-value="精品點陣體7×7 1.71"
+              style="font-family: '精品點陣體7×7 1.71', monospace;">精品點陣體7×7 1.71</div>
+            <div class="custom-select-option" data-value="QuanPixel 8px"
+              style="font-family: 'QuanPixel 8px', monospace;">QuanPixel 8px</div>
+            <div class="custom-select-option" data-value="Fusion Pixel 8px Proportional"
+              style="font-family: 'Fusion Pixel 8px Proportional', monospace;">Fusion Pixel 8px Proportional</div>
+            <div class="custom-select-option" data-value="Fusion Pixel 8px Monospaced"
+              style="font-family: 'Fusion Pixel 8px Monospaced', monospace;">Fusion Pixel 8px Monospaced</div>
+            <div class="custom-select-option" data-value="GuanZhi" style="font-family: 'GuanZhi', monospace;">GuanZhi
+            </div>
+            <div class="custom-select-option" data-value="美績點陣體" style="font-family: '美績點陣體', monospace;">美績點陣體</div>
+            <div class="custom-select-option" data-value="美績點陣體 - 明" style="font-family: '美績點陣體 - 明', monospace;">
+              美績點陣體 - 明</div>
+            <div class="custom-select-divider"></div>
+            <input id="fontCustomInput" class="custom-select-input" type="text" placeholder="输入自定义字体..." />
+          </div>
+        </div>
+      </div>
+
+      <!-- 字符模式 -->
+      <div class="config-item">
+        <label class="config-item-label">字符模式</label>
+        <div class="config-item-content">
+          <label class="radio-option">
+            <input type="radio" onclick="setPattern('1.0')" class="patternSelect" name="patternSelect" value="1.0"
+              checked />
+            <span class="char-symbol">▞</span><span>1.0~1.19.4</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" onclick="setPattern('1.20')" class="patternSelect" name="patternSelect" value="1.20" />
+            <span class="char-symbol">◛◚</span><span>1.20+</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" onclick="setPattern('1.20-wide')" class="patternSelect" name="patternSelect"
+              value="1.20-wide" />
+            <span class="char-symbol">▄▀</span><span>1.20+ 宽</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" onclick="setPattern('braille')" class="patternSelect" name="patternSelect"
+              value="braille" />
+            <span class="char-symbol">⣤⠛</span><span>盲文</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" onclick="togglePatternSection()" class="patternSelect" name="patternSelect"
+              value="custom" />
+            <span>自定义</span>
+          </label>
+        </div>
+        <div id="patternSection" class="custom-char-section">
+          <div id="patternWrapper"></div>
+          <template id="patternTemplate">
+            <label>
+              <code></code>
+              <input name="pattern" value="" />
+            </label>
+          </template>
+        </div>
+      </div>
+
     </div>
     <button type="button" onclick="main()" class="btn-primary">绘制</button>
   </div>

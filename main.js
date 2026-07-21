@@ -23,7 +23,7 @@ const fontCustomInput = document.getElementById('fontCustomInput');
 const fontOptions = fontSelect.querySelectorAll('.custom-select-option');
 
 fontSelectText.style.fontFamily = `'${selectedFont}', monospace`;
-document.querySelector("#inputWrapper > textarea").style.fontFamily = `'${selectedFont}'`;
+document.querySelector("textarea.autoWidth").style.fontFamily = `'${selectedFont}'`;
 
 fontSelectTrigger.addEventListener('click', (e) => {
   e.stopPropagation();
@@ -38,7 +38,7 @@ fontOptions.forEach(option => {
     fontOptions.forEach(o => o.classList.remove('active'));
     option.classList.add('active');
     fontSelect.classList.remove('open');
-    document.querySelector("#inputWrapper > textarea").style.fontFamily = `'${selectedFont}'`;
+    document.querySelector("textarea.autoWidth").style.fontFamily = `'${selectedFont}'`;
   });
 });
 
@@ -60,7 +60,7 @@ function applyCustomFont() {
   fontSelectText.style.fontFamily = `'${selectedFont}', monospace`;
   fontOptions.forEach(o => o.classList.remove('active'));
   fontSelect.classList.remove('open');
-  document.querySelector("#inputWrapper > textarea").style.fontFamily = `'${selectedFont}'`;
+  document.querySelector("textarea.autoWidth").style.fontFamily = `'${selectedFont}'`;
   fontCustomInput.value = '';
 }
 
@@ -93,12 +93,13 @@ async function main() {
     }
   }
 
-  const inputText = document.querySelector("#inputWrapper > textarea").value;
-  const isHangingSign = document.querySelector(".signType:checked").value == "hangingSign";
-  const gameVersion = document.querySelector(".gameVersion:checked").value;
-  customChar = getCustomChar();
+  const inputText = document.querySelector("textarea.autoWidth").value;
+  const signType = document.querySelector(".signType:checked").value;
+  const edition = document.querySelector(".edition:checked")?.value || "je";
+  const patternName = document.querySelector(".patternSelect:checked")?.value || "1.0";
+  pixelMapping = getPixelMapping();
 
-  const canvases = text2canvases(inputText, isHangingSign, gameVersion, selectedFont);
+  const canvases = text2canvases(inputText, signType, edition, patternName, selectedFont);
   const signs = canvases2signs(canvases);
 
   const signsWrapper = document.querySelector("#signsWrapper");
@@ -108,14 +109,14 @@ async function main() {
   renderSigns(signs, signsWrapper);
 }
 
-function text2canvases(text, isHangingSign, gameVersion, fontName) {
+function text2canvases(text, signType, edition, patternName, fontName) {
   let canvases = [];
   let cannotDraw = false;
   const paragraphs = text.replace(/\r/g, '').split('\n');
   for (const para of paragraphs) {
     let textArray = Array.from(para);
     while (textArray.length) {
-      let canvas = newCanvas(isHangingSign, gameVersion, fontName);
+      let canvas = newCanvas(signType, edition, patternName, fontName);
       let ctx = canvas.getContext("2d");
       let widthUsed = 0;
       let widthCharNext = 0;
@@ -124,7 +125,7 @@ function text2canvases(text, isHangingSign, gameVersion, fontName) {
         let charWidth = ctx.measureText(Char).width;
         if (charWidth > canvas.width) {
           cannotDraw = true;
-          continue;
+          break;
         }
         ctx.fillText(Char, widthUsed, canvas.height - 1);
         widthUsed += charWidth;
@@ -139,19 +140,18 @@ function text2canvases(text, isHangingSign, gameVersion, fontName) {
   }
   return canvases;
 
-  function newCanvas(isHangingSign, gameVersion, fontName) {
+  function newCanvas(signType, edition, patternName, fontName) {
     let canvas = document.createElement("canvas");
     canvas.className = "previewCanvas";
     canvas.height = 8;
-    
-    if (isHangingSign) {
-      canvas.width = 12;
-    } else if (gameVersion === "1.20") {
-      canvas.width = 10;
+
+    const canvasWidthConfig = patterns[patternName].canvasWidth;
+    if (signType === "hangingSign") {
+      canvas.width = edition === "be" ? canvasWidthConfig.beHangingSign : canvasWidthConfig.jeHangingSign;
     } else {
-      canvas.width = 20;
+      canvas.width = edition === "be" ? canvasWidthConfig.beSign : canvasWidthConfig.jeSign;
     }
-    
+
     let ctx = canvas.getContext("2d");
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -184,7 +184,7 @@ function canvases2signs(canvases) {
           let p1 = canvasData[y - 1][x - 1],
             p2 = canvasData[y - 1][x],
             p3 = canvasData[y][x - 1];
-          sign[(y - 1) / 2][(x - 1) / 2] = customChar[(p1 << 3) | (p2 << 2) | (p3 << 1) | pixel];
+          sign[(y - 1) / 2][(x - 1) / 2] = pixelMapping[(p1 << 3) | (p2 << 2) | (p3 << 1) | pixel];
         }
       }
     }
@@ -210,7 +210,7 @@ function renderSigns(signs, wrapper) {
     sign.forEach(signLineText => {
       let lineContainer = document.createElement("div");
       lineContainer.className = "signLineContainer";
-      
+
       let signLineElement = document.createElement("pre");
       signLineElement.className = "signLine";
       signLineElement.innerText = signLineText;
@@ -262,8 +262,16 @@ function showToast(message) {
   toast.textContent = message;
   document.body.appendChild(toast);
 
+  requestAnimationFrame(() => {
+    toast.classList.add('showing');
+  });
+
   setTimeout(() => {
-    toast.remove();
+    toast.classList.remove('showing');
+    toast.classList.add('hiding');
+    toast.addEventListener('transitionend', () => {
+      toast.remove();
+    }, { once: true });
   }, 3000);
 }
 
@@ -271,7 +279,7 @@ function copyToClipboard(text) {
   const clipboard = navigator.clipboard;
   if (clipboard) {
     clipboard.writeText(text).then(() => {
-      showToast('复制成功！');
+      showToast('已复制到剪贴板');
     }).catch(() => {
       execCommandCopyToClipboard();
     });
@@ -289,6 +297,6 @@ function copyToClipboard(text) {
     textArea.select();
     document.execCommand("Copy");
     textArea.remove();
-    showToast('复制成功！');
+    showToast('已复制到剪贴板');
   }
 }
