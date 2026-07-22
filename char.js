@@ -29,10 +29,10 @@ const patterns = {
   "braille": {
     pixelMapping: ["⠀⠀", "⠀⣤", "⣤⠀", "⣤⣤", "⠀⠛", "⠀⣿", "⣤⠛", "⣤⣿", "⠛⠀", "⠛⣤", "⣿⠀", "⣿⣤", "⠛⠛", "⠛⣿", "⣿⠛", "⣿⣿"],
     canvasWidth: {
-      jeSign: 20,
-      jeHangingSign: 12,
-      beSign: 20,
-      beHangingSign: 12,
+      jeSign: 30,
+      jeHangingSign: 20,
+      beSign: 24,
+      beHangingSign: 16,
     },
   },
 };
@@ -43,6 +43,8 @@ function togglePatternSection() {
   const section = document.getElementById('patternSection');
   const customRadio = document.querySelector('.patternSelect[value="custom"]');
   section.classList.toggle('expanded', customRadio.checked);
+  const editionSection = document.getElementById("editionSection");
+  if (editionSection) editionSection.style.display = "none";
 }
 
 document.querySelectorAll('.patternSelect').forEach(radio => {
@@ -55,6 +57,8 @@ document.querySelectorAll('.patternSelect').forEach(radio => {
 
 function setPattern(patternName) {
   setPixelMapping(patterns[patternName].pixelMapping);
+  const editionSection = document.getElementById("editionSection");
+  if (editionSection) editionSection.style.display = patternName === "braille" ? "" : "none";
 }
 
 function setPixelMapping(pixelMapping) {
@@ -68,6 +72,7 @@ function setPixelMapping(pixelMapping) {
     const dom_input = dom.querySelector("input");
     dom_input.id = `pattern_0b${charName}`;
     dom_input.value = char;
+    dom_input.style.fontFamily = "'Minecraft AE', monospace";
     patternWrapper.appendChild(dom);
   });
 }
