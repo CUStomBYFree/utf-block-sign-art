@@ -72,4 +72,12 @@
   font-family: "美績點陣體 - 明";
   src: url("MisekiBitmapMincho.ttf.woff2") format("woff2");
 }
+@font-face {
+  font-family: "Public Pixel";
+  src: url("PublicPixel.ttf.woff2") format("woff2");
+}
+@font-face {
+  font-family: "袖珍像素体";
+  src: url("XiuZhenXiangSuTi.ttf.woff2") format("woff2");
+}
 
