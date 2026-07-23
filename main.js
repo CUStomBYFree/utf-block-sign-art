@@ -1,17 +1,16 @@
+const pixelScale = 8;
+
 const fontsToLoad = [
   'Chill Bitmap 7px',
   '精品點陣體7×7 1.71',
   'QuanPixel 8px',
   'Fusion Pixel 8px Proportional',
   'Fusion Pixel 8px Monospaced',
-  'GuanZhi',
+  'GuanZhi 8px',
   '美績點陣體',
   '美績點陣體 - 明',
-  'Five',
-  'Mojang Regular',
   'Public Pixel',
   '袖珍像素体',
-  'Minecraft AE'
 ];
 
 fontsToLoad.forEach(fontName => {
@@ -19,16 +18,18 @@ fontsToLoad.forEach(fontName => {
 });
 
 let selectedFont = 'Chill Bitmap 7px';
+let autoUpdate = false;
 
-const fontSelect = document.getElementById('fontSelect');
-const fontSelectText = document.getElementById('fontSelectText');
+const fontSelect = document.querySelector('#fontSelect');
+const fontSelectText = document.querySelector('#fontSelectText');
 const fontSelectTrigger = fontSelect.querySelector('.custom-select-trigger');
 const fontSelectDropdown = fontSelect.querySelector('.custom-select-dropdown');
-const fontCustomInput = document.getElementById('fontCustomInput');
+const fontCustomInput = document.querySelector('#fontCustomInput');
 const fontOptions = fontSelect.querySelectorAll('.custom-select-option');
 
 fontSelectText.style.fontFamily = `'${selectedFont}', monospace`;
-document.getElementById("textInput").style.fontFamily = `'${selectedFont}'`;
+document.querySelector("#textInput").style.fontFamily = `'${selectedFont}'`;
+document.querySelector("#highlightOverlay").style.fontFamily = `'${selectedFont}'`;
 
 fontSelectTrigger.addEventListener('click', (e) => {
   e.stopPropagation();
@@ -43,9 +44,8 @@ fontOptions.forEach(option => {
     fontOptions.forEach(o => o.classList.remove('active'));
     option.classList.add('active');
     fontSelect.classList.remove('open');
-    document.getElementById("textInput").style.fontFamily = `'${selectedFont}'`;
-    syncHighlight();
-    updateDebugDisplay(selectedFont);
+    document.querySelector("#textInput").style.fontFamily = `'${selectedFont}'`;
+    document.querySelector("#highlightOverlay").style.fontFamily = `'${selectedFont}'`;
   });
 });
 
@@ -67,9 +67,9 @@ function applyCustomFont() {
   fontSelectText.style.fontFamily = `'${selectedFont}', monospace`;
   fontOptions.forEach(o => o.classList.remove('active'));
   fontSelect.classList.remove('open');
-  document.getElementById("textInput").style.fontFamily = `'${selectedFont}'`;
+  document.querySelector("#textInput").style.fontFamily = `'${selectedFont}'`;
+  document.querySelector("#highlightOverlay").style.fontFamily = `'${selectedFont}'`;
   fontCustomInput.value = '';
-  syncHighlight();
 }
 
 fontCustomInput.addEventListener('click', (e) => e.stopPropagation());
@@ -91,22 +91,9 @@ document.addEventListener('click', (e) => {
 
 fontSelectDropdown.addEventListener('click', (e) => e.stopPropagation());
 
-let isComposing = false;
 
-document.getElementById("textInput").addEventListener('compositionstart', () => {
-  isComposing = true;
-});
-document.getElementById("textInput").addEventListener('compositionend', () => {
-  isComposing = false;
-  syncHighlight();
-});
-document.getElementById("textInput").addEventListener('input', () => {
-  if (!isComposing) syncHighlight();
-});
 
 async function main() {
-  syncHighlight();
-
   if (!document.fonts.check(`8px '${selectedFont}'`)) {
     showToast('字体加载中...');
     await document.fonts.load(`8px '${selectedFont}'`);
@@ -115,327 +102,290 @@ async function main() {
       existingToast.remove();
     }
   }
-  await document.fonts.load('16px "Mojangles"');
-  await document.fonts.load('16px "GNU Unifont"');
 
-  const inputText = document.getElementById("textInput").innerText;
+  const inputText = document.querySelector("#textInput").innerText;
   const signType = document.querySelector(".signType:checked").value;
   const edition = document.querySelector(".edition:checked")?.value || "je";
   const patternName = document.querySelector(".patternSelect:checked")?.value || "1.0";
-  pixelMapping = getPixelMapping();
+  const pixelMapping = patternName === 'custom' ? getPixelMapping() : patterns[patternName].pixelMapping;
 
-  const canvases = text2canvases(inputText, signType, edition, patternName, selectedFont);
-  const signs = canvases2signs(canvases, selectedFont);
+  const cw = patternName === 'custom' ? getCustomCanvasWidth() : patterns[patternName].canvasWidth;
+  const canvasWidth = signType === "hangingSign"
+    ? (edition === "be" ? cw.beHangingSign : cw.jeHangingSign)
+    : (edition === "be" ? cw.beSign : cw.jeSign);
+
+  const { overWidthChars, unsupportedChars } = getUnavailableChars(inputText, canvasWidth, selectedFont);
+  if (overWidthChars.size > 0) showToast('部分字符超出宽度，已跳过');
+  if (unsupportedChars.size > 0) showToast('部分字符不在字体中，已跳过');
+  const highlightChars = new Set([...overWidthChars, ...unsupportedChars]);
+  const canvases = text2canvases(inputText, canvasWidth, selectedFont, getFontParams(selectedFont), highlightChars);
+  const signs = canvases2signs(canvases, selectedFont, pixelMapping);
 
   const signsWrapper = document.querySelector("#signsWrapper");
   const canvasWrapper = document.querySelector("#canvasWrapper");
 
   renderCanvases(canvases, canvasWrapper);
   renderSigns(signs, signsWrapper, signType, patternName);
+  syncHighlight(highlightChars);
 }
 
-/* ===== 字体参数系统 =====
- * 每种字体可独立配置：offsetX / offsetY / mode
- * DEBUG 模式：Ctrl+D 开关，十字键实时调参，自动重绘
- */
+// 微调界面
 const fontParams = {};
 
 function getFontParams(fontName) {
   if (!fontParams[fontName]) {
-    // 预设参数
-    if (fontName === 'Fusion Pixel 8px Proportional') {
-      fontParams[fontName] = { offsetX: -0.15, offsetY: 0, mode: '8x8', threshold: 121, gridShift: 2.7, cellW: 3 };
-    } else if (fontName === 'Fusion Pixel 8px Monospaced') {
-      fontParams[fontName] = { offsetX: -0.15, offsetY: 0, mode: '8x8', threshold: 121, gridShift: 2.7, cellW: 3 };
-    } else if (fontName === 'GuanZhi') {
-      fontParams[fontName] = { offsetX: 0.05, offsetY: 0, mode: '8x8', threshold: 127, gridShift: 2.5, cellW: 3 };
-    } else if (fontName === 'Five') {
-      fontParams[fontName] = { offsetX: -0.7, offsetY: 0, mode: '8x8', threshold: 60, gridShift: 2.7, cellW: 3.3 };
-    } else if (fontName === 'Mojang Regular') {
-      fontParams[fontName] = { offsetX: 0.03, offsetY: 0, mode: '8x8', threshold: 60, gridShift: 2, cellW: 3.1 };
-    } else if (fontName === 'Public Pixel') {
-      fontParams[fontName] = { offsetX: 0.00, offsetY: 0, mode: '8x8', threshold: 127, gridShift: 2, cellW: 3 };
-    } else if (fontName === '袖珍像素体') {
-      fontParams[fontName] = { offsetX: 0.00, offsetY: 0, mode: '8x8', threshold: 127, gridShift: 2, cellW: 3 };
-    } else {
-      fontParams[fontName] = { offsetX: 0, offsetY: 0, mode: '8x8', threshold: 127, gridShift: 2.7, cellW: 3 };
-    }
+    fontParams[fontName] = { offsetX: 0, offsetY: 0, threshold: 127 };
   }
   return fontParams[fontName];
 }
 
-/* ===== DEBUG 面板 ===== */
-let debugMode = false;
+let adjustMode = false;
 
 
-function toggleDebug() {
-  debugMode = !debugMode;
-  const panel = document.getElementById('debugPanel');
-  panel.style.display = debugMode ? 'block' : 'none';
-  const devBtn = document.getElementById('devModeBtn');
-  if (devBtn) devBtn.classList.toggle('active', debugMode);
-  if (debugMode) updateDebugDisplay(selectedFont);
+function toggleAdjust() {
+  adjustMode = !adjustMode;
+  const panel = document.querySelector('#adjustPanel');
+  panel.style.display = adjustMode ? 'block' : 'none';
+  if (adjustMode) updateAdjustDisplay(selectedFont);
 }
 
-function updateDebugDisplay(fontName) {
-  if (!debugMode) return;
+function updateAdjustDisplay(fontName) {
+  if (!adjustMode) return;
   const p = getFontParams(fontName);
-  document.getElementById('debugFontName').textContent = fontName;
-  document.getElementById('debugOffsetX').value = p.offsetX.toFixed(2);
-  document.getElementById('debugOffsetY').value = p.offsetY.toFixed(2);
-  document.getElementById('debugGridShift').value = p.gridShift.toFixed(1);
-  document.getElementById('debugMode').textContent = p.mode;
-  document.getElementById('debugThreshold').value = p.threshold;
-  document.getElementById('debugCellW').value = p.cellW.toFixed(1);
-  document.getElementById('debugThresholdPreview').style.backgroundColor = `rgb(${p.threshold},${p.threshold},${p.threshold})`;
-}
-
-function adjustParam(fontName, key, delta) {
-  const p = getFontParams(fontName);
-  p[key] += delta;
-  updateDebugDisplay(fontName);
-  // main() 由 updateDebugDisplay 触发的 input 事件自动调用
+  document.querySelector('#adjustOffsetX').value = p.offsetX.toFixed(2);
+  document.querySelector('#adjustOffsetY').value = p.offsetY.toFixed(2);
+  document.querySelector('#adjustThreshold').value = p.threshold;
 }
 
 function resetParams(fontName) {
-  fontParams[fontName] = { offsetX: 0, offsetY: 0, mode: '8x8', threshold: 127, gridShift: 2.7, cellW: 3 };
-  updateDebugDisplay(fontName);
-  // main() 由 updateDebugDisplay 触发的 input 事件自动调用
+  fontParams[fontName] = { offsetX: 0, offsetY: 0, threshold: 127 };
+  updateAdjustDisplay(fontName);
+  if (autoUpdate) main();
 }
 
-function toggleFontMode(fontName) {
-  const p = getFontParams(fontName);
-  p.mode = p.mode === '8x8' ? '7x7' : '8x8';
-  updateDebugDisplay(fontName);
-  main();
-}
 
-// Ctrl+D 开关
-document.addEventListener('keydown', (e) => {
-  if (e.ctrlKey && e.key === 'd') {
-    e.preventDefault();
-    toggleDebug();
-  }
-});
 
-// 十字键绑定
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('debugGridShiftRow').style.display = 'flex';
-  document.getElementById('debugOffsetYRow').style.display = 'none';
-  document.getElementById('debugReset').addEventListener('click', () => resetParams(selectedFont));
-  document.getElementById('devModeBtn').addEventListener('click', toggleDebug);
-  document.getElementById('debugThreshold').addEventListener('input', () => {
+  document.querySelector('#adjustReset').addEventListener('click', () => resetParams(selectedFont));
+  document.querySelector('#adjustToggle').addEventListener('click', toggleAdjust);
+  document.querySelector('#adjustThreshold').addEventListener('input', () => {
     const p = getFontParams(selectedFont);
-    p.threshold = parseInt(document.getElementById('debugThreshold').value) || 127;
-    document.getElementById('debugThresholdPreview').style.backgroundColor = `rgb(${p.threshold},${p.threshold},${p.threshold})`;
-    main();
+    p.threshold = parseInt(document.querySelector('#adjustThreshold').value) ?? 127;
+    if (autoUpdate) main();
   });
-  document.getElementById('debugOffsetX').addEventListener('input', () => {
+  document.querySelector('#adjustOffsetX').addEventListener('input', () => {
     const p = getFontParams(selectedFont);
-    p.offsetX = parseFloat(document.getElementById('debugOffsetX').value) || 0;
-    main();
+    p.offsetX = parseFloat(document.querySelector('#adjustOffsetX').value) ?? 0;
+    if (autoUpdate) main();
   });
-  document.getElementById('debugOffsetY').addEventListener('input', () => {
+  document.querySelector('#adjustOffsetY').addEventListener('input', () => {
     const p = getFontParams(selectedFont);
-    p.offsetY = parseFloat(document.getElementById('debugOffsetY').value) || 0;
-    main();
+    p.offsetY = parseFloat(document.querySelector('#adjustOffsetY').value) ?? 0;
+    if (autoUpdate) main();
   });
-  document.getElementById('debugGridShift').addEventListener('input', () => {
-    const p = getFontParams(selectedFont);
-    p.gridShift = parseFloat(document.getElementById('debugGridShift').value) || 0;
-    main();
+  document.querySelectorAll('input[name="autoUpdate"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      autoUpdate = radio.value === 'on';
+    });
   });
-  document.getElementById('debugCellW').addEventListener('input', () => {
-    const p = getFontParams(selectedFont);
-    p.cellW = parseFloat(document.getElementById('debugCellW').value) || 3;
-    main();
+
+  // 自动更新绘制触发器
+  document.querySelectorAll('.edition').forEach(radio => {
+    radio.addEventListener('change', () => {
+      if (autoUpdate) main();
+    });
+  });
+  document.querySelectorAll('.signType').forEach(radio => {
+    radio.addEventListener('change', () => {
+      if (autoUpdate) main();
+    });
+  });
+  document.querySelector('#textInput').addEventListener('input', () => {
+    syncHighlight();
+    if (autoUpdate) main();
+  });
+  fontOptions.forEach(option => {
+    option.addEventListener('click', () => {
+      if (autoUpdate) main();
+    });
+  });
+  document.querySelectorAll('.patternSelect').forEach(radio => {
+    radio.addEventListener('click', () => {
+      if (autoUpdate) main();
+    });
+  });
+
+  document.querySelector('#patternWrapper').addEventListener('input', () => {
+    if (autoUpdate) main();
+  });
+
+  document.querySelectorAll('.canvas-width-row input[type="number"]').forEach(input => {
+    const clamp = () => {
+      const val = parseInt(input.value);
+      if (!isNaN(val)) {
+        input.value = Math.max(0, Math.round(val / 2) * 2);
+      }
+    };
+    input.addEventListener('input', () => {
+      if (autoUpdate) { clamp(); main(); }
+    });
+    input.addEventListener('blur', () => {
+      clamp();
+      if (autoUpdate) main();
+    });
+  });
+
+  document.querySelectorAll('.adjust-input').forEach(input => {
+    const clamp = () => {
+      const val = parseFloat(input.value);
+      if (!isNaN(val)) {
+        input.value = Math.max(parseFloat(input.min), Math.min(parseFloat(input.max), val));
+      }
+    };
+    input.addEventListener('input', () => {
+      if (autoUpdate) { clamp(); main(); }
+    });
+    input.addEventListener('blur', () => {
+      clamp();
+      if (autoUpdate) main();
+    });
   });
 });
 
-function text2canvases(text, signType, edition, patternName, fontName) {
-  return text2canvases24(text, signType, edition, patternName, fontName, getFontParams(fontName));
-}
-
-
-function text2canvases24(text, signType, edition, patternName, fontName, params) {
+function text2canvases(text, canvasWidth, fontName, params, highlightChars) {
   let canvases = [];
-  let cannotDraw = false;
   const paragraphs = text.replace(/\r/g, '').split('\n');
-
-  function getW() {
-    const cw = patterns[patternName].canvasWidth;
-    return signType === "hangingSign"
-      ? (edition === "be" ? cw.beHangingSign : cw.jeHangingSign)
-      : (edition === "be" ? cw.beSign : cw.jeSign);
-  }
-  const w8 = getW();
-  const wRender = Math.round(w8 * params.cellW);
 
   for (const para of paragraphs) {
     let textArray = Array.from(para);
     while (textArray.length) {
-      let canvasRender = document.createElement("canvas");
-      canvasRender.height = 40;
-      canvasRender.width = wRender;
-      let ctxRender = canvasRender.getContext("2d");
-      ctxRender.fillStyle = "#fff";
-      ctxRender.fillRect(0, 0, wRender, 40);
-      ctxRender.fillStyle = "#000";
-      ctxRender.font = `24px '${fontName}'`;
+      let canvas = document.createElement("canvas");
+      canvas.className = "previewCanvas";
+      canvas.height = 8 * pixelScale;
+      canvas.width = canvasWidth * pixelScale;
+      let ctx = canvas.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#000";
+      ctx.font = `${8 * pixelScale}px '${fontName}'`;
+      ctx.textBaseline = 'top';
 
       let widthUsed = 0;
       let widthCharNext = 0;
       do {
         let Char = textArray.shift();
-        if (window._isGlyphSupported && !window._isGlyphSupported(fontName, Char)) {
+        if (highlightChars.has(Char)) {
           if (!textArray.length) break;
-          widthCharNext = ctxRender.measureText(textArray[0]).width;
+          widthCharNext = ctx.measureText(textArray[0]).width;
           continue;
         }
-        let charWidth = ctxRender.measureText(Char).width;
-        if (charWidth > wRender) {
-          cannotDraw = true;
-          break;
-        }
-        ctxRender.fillText(Char, Math.round(widthUsed) + params.offsetX * params.cellW, 30 + params.offsetY * 3);
+        let charWidth = ctx.measureText(Char).width;
+        ctx.fillText(Char, Math.round(widthUsed) + params.offsetX * canvas.height, params.offsetY * canvas.height);
         widthUsed += charWidth;
         if (!textArray.length) break;
-        widthCharNext = ctxRender.measureText(textArray[0]).width;
-      } while (widthUsed + widthCharNext <= wRender);
+        widthCharNext = ctx.measureText(textArray[0]).width;
+      } while (widthUsed + widthCharNext <= canvas.width);
 
       if (widthUsed === 0) continue;
-
-      let canvas8 = document.createElement("canvas");
-      canvas8.className = "previewCanvas";
-      canvas8.height = 8;
-      canvas8.width = w8;
-      let ctx8 = canvas8.getContext("2d");
-      let sy = params.gridShift * 3;
-      ctx8.drawImage(canvasRender, 0, sy, wRender, 24, 0, 0, w8, 8);
-      canvases.push(canvas8);
+      canvases.push(canvas);
     }
   }
-  if (cannotDraw) { showToast('部分字符无法绘制，已跳过'); }
   return canvases;
 }
 
 
-function getBadChars() {
-  const text = document.getElementById("textInput").innerText;
-  const signType = document.querySelector(".signType:checked")?.value || "sign";
-  const edition = document.querySelector(".edition:checked")?.value || "je";
-  const patternName = document.querySelector(".patternSelect:checked")?.value || "1.0";
-
-  const cw = patterns[patternName].canvasWidth;
-  const w8 = signType === "hangingSign"
-    ? (edition === "be" ? cw.beHangingSign : cw.jeHangingSign)
-    : (edition === "be" ? cw.beSign : cw.jeSign);
-  const w24 = w8 * (getFontParams(selectedFont).cellW || 3);
-
+function getUnavailableChars(text, availableWidth, fontName) {
   let tempCanvas = document.createElement("canvas");
   let tempCtx = tempCanvas.getContext("2d");
-  tempCtx.font = `24px '${selectedFont}'`;
+  tempCtx.font = `8px '${fontName}'`;
 
-  let bad = new Set();
+  let overWidthChars = new Set();
+  let unsupportedChars = new Set();
   const unique = [...new Set(text.replace(/[\r\n]/g, ''))];
   for (const char of unique) {
     if (char === '\n') continue;
-    const w = tempCtx.measureText(char).width;
-    if (w > w24) { bad.add(char); continue; }
-    if (w === 0) { bad.add(char); continue; }
-    // 基于字体文件解析的cmap表检测字形缺失（替代原先不可靠的像素/tofu对比）
-    if (window._isGlyphSupported && !window._isGlyphSupported(selectedFont, char)) {
-      bad.add(char);
+    const charWidth = tempCtx.measureText(char).width;
+    if (charWidth > availableWidth) { overWidthChars.add(char); }
+    if (charWidth === 0 || (window._isGlyphSupported && !window._isGlyphSupported(fontName, char))) {
+      unsupportedChars.add(char);
     }
   }
 
-  return bad;
+  return { overWidthChars, unsupportedChars };
 }
 
-function syncHighlight() {
-  const div = document.getElementById("textInput");
-  if (!div) return;
 
-  const bad = getBadChars();
-  const sel = window.getSelection();
-  let cursorOffset = 0;
-  if (sel.rangeCount && div.contains(sel.anchorNode)) {
-    const range = sel.getRangeAt(0);
-    const preRange = document.createRange();
-    preRange.selectNodeContents(div);
-    preRange.setEnd(range.startContainer, range.startOffset);
-    cursorOffset = preRange.toString().length;
+function syncHighlight(highlightChars) {
+  const div = document.querySelector("#textInput");
+  const overlay = document.querySelector("#highlightOverlay");
+  if (!div || !overlay) return;
+
+  if (!highlightChars) {
+    const text = div.innerText;
+    const signType = document.querySelector(".signType:checked")?.value || "sign";
+    const edition = document.querySelector(".edition:checked")?.value || "je";
+    const patternName = document.querySelector(".patternSelect:checked")?.value || "1.0";
+    const cw = patternName === 'custom' ? getCustomCanvasWidth() : patterns[patternName].canvasWidth;
+    const canvasWidth = signType === "hangingSign"
+      ? (edition === "be" ? cw.beHangingSign : cw.jeHangingSign)
+      : (edition === "be" ? cw.beSign : cw.jeSign);
+    const { overWidthChars, unsupportedChars } = getUnavailableChars(text, canvasWidth, selectedFont);
+    highlightChars = new Set([...overWidthChars, ...unsupportedChars]);
   }
-
   const text = div.innerText;
+
   let html = '';
   for (const char of text) {
     if (char === '\n') {
       html += '<br>';
-    } else if (bad.has(char)) {
-      html += `<span class="bad-char">${char === '&' ? '&amp;' : char === '<' ? '&lt;' : char === '>' ? '&gt;' : char}</span>`;
+    } else if (highlightChars.has(char)) {
+      html += `<span class="highlight-char">${char === '&' ? '&amp;' : char === '<' ? '&lt;' : char === '>' ? '&gt;' : char}</span>`;
     } else {
       html += char === '&' ? '&amp;' : char === '<' ? '&lt;' : char === '>' ? '&gt;' : char;
     }
   }
-  div.innerHTML = html;
-
-  // restore cursor
-  let remaining = cursorOffset;
-  const textNodes = [];
-  function walk(n) {
-    if (n.nodeType === 3) textNodes.push(n);
-    else n.childNodes.forEach(walk);
-  }
-  walk(div);
-  for (const node of textNodes) {
-    if (remaining <= node.textContent.length) {
-      const r = document.createRange();
-      r.setStart(node, remaining);
-      r.collapse(true);
-      sel.removeAllRanges();
-      sel.addRange(r);
-      return;
-    }
-    remaining -= node.textContent.length;
-  }
-  // fallback: place at end
-  const last = textNodes[textNodes.length - 1];
-  if (last) {
-    const r = document.createRange();
-    r.setStart(last, last.textContent.length);
-    r.collapse(true);
-    sel.removeAllRanges();
-    sel.addRange(r);
-  }
+  overlay.innerHTML = html;
 }
 
-function canvases2signs(canvases, fontName) {
+function canvases2signs(canvases, fontName, pixelMapping) {
   let signs = [];
   const threshold = getFontParams(fontName).threshold;
+  const scale = pixelScale;
 
   canvases.forEach(canvas => {
-    let canvasData = Array.from(new Array(canvas.height), () => new Array(canvas.width));
-    let sign = Array.from(new Array(canvas.height / 2), () => new Array(canvas.width / 2));
-
     let ctx = canvas.getContext("2d");
     let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
 
-    for (let y = 0; y < canvas.height; y++) {
-      for (let x = 0; x < canvas.width; x++) {
-        let i = (y * canvas.width + x) * 4;
-        const R = imgData[i];
-        const G = imgData[i + 1];
-        const B = imgData[i + 2];
-        let pixel = ((R + G + B) / 3 < threshold) ? 1 : 0;
+    const targetRows = canvas.height / scale;
+    const targetCols = canvas.width / scale;
+    let canvasData = Array.from(new Array(targetRows), () => new Array(targetCols));
 
-        canvasData[y][x] = pixel;
-        if (y % 2 && x % 2) {
-          let p1 = canvasData[y - 1][x - 1],
-            p2 = canvasData[y - 1][x],
-            p3 = canvasData[y][x - 1];
-          sign[(y - 1) / 2][(x - 1) / 2] = pixelMapping[(p1 << 3) | (p2 << 2) | (p3 << 1) | pixel];
+    for (let row = 0; row < targetRows; row++) {
+      for (let col = 0; col < targetCols; col++) {
+        let rSum = 0, gSum = 0, bSum = 0, count = 0;
+        for (let sy = row * scale; sy < (row + 1) * scale; sy++) {
+          for (let sx = col * scale; sx < (col + 1) * scale; sx++) {
+            let i = (sy * canvas.width + sx) * 4;
+            rSum += imgData[i];
+            gSum += imgData[i + 1];
+            bSum += imgData[i + 2];
+            count++;
+          }
         }
+        let avg = (rSum + gSum + bSum) / (3 * count);
+        canvasData[row][col] = avg < threshold ? 1 : 0;
+      }
+    }
+
+    let sign = Array.from(new Array(targetRows / 2), () => new Array(targetCols / 2));
+    for (let y = 1; y < targetRows; y += 2) {
+      for (let x = 1; x < targetCols; x += 2) {
+        let p1 = canvasData[y - 1][x - 1],
+          p2 = canvasData[y - 1][x],
+          p3 = canvasData[y][x - 1],
+          p4 = canvasData[y][x];
+        sign[(y - 1) / 2][(x - 1) / 2] = pixelMapping[(p1 << 3) | (p2 << 2) | (p3 << 1) | p4];
       }
     }
     sign = sign.map(e => e.join(""));
@@ -462,20 +412,14 @@ function renderSigns(signs, wrapper, signType, patternName) {
     if (signType === "hangingSign") {
       signElement.classList.add("sign-hanging");
     }
-    if (patternName === "braille") {
-      signElement.classList.add("sign-braille");
-      signElement.classList.add(edition === "je" ? "sign-braille-je" : "sign-braille-be");
-    }
+
 
     sign.forEach(signLineText => {
-      let lineContainer = document.createElement("div");
-      lineContainer.className = "signLineContainer";
-
       let signLineElement = document.createElement("pre");
       signLineElement.className = "signLine";
       signLineElement.style.fontFamily = '"Minecraft AE", monospace';
       signLineElement.innerText = signLineText;
-      lineContainer.appendChild(signLineElement);
+      signElement.appendChild(signLineElement);
 
       let copyButton = document.createElement("button");
       copyButton.className = "lineCopyButton";
@@ -492,9 +436,7 @@ function renderSigns(signs, wrapper, signType, patternName) {
           window.alert("复制失败: " + err);
         }
       });
-      lineContainer.appendChild(copyButton);
-
-      signElement.appendChild(lineContainer);
+      signElement.appendChild(copyButton);
     });
 
     let copyAllButton = document.createElement("button");
@@ -513,15 +455,17 @@ function renderSigns(signs, wrapper, signType, patternName) {
 }
 
 function showToast(message) {
-  const existingToast = document.querySelector('.toast');
-  if (existingToast) {
-    existingToast.remove();
+  let container = document.querySelector('#toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    document.body.appendChild(container);
   }
 
   const toast = document.createElement('div');
   toast.className = 'toast';
   toast.textContent = message;
-  document.body.appendChild(toast);
+  container.appendChild(toast);
 
   requestAnimationFrame(() => {
     toast.classList.add('showing');

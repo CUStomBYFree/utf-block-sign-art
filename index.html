@@ -15,8 +15,27 @@
     <div class="config-section">
       <div class="config-item">
         <label class="config-item-label">输入文字</label>
-        <div id="textInput" class="autoWidth" contenteditable="true" placeholder="在此输入文字...">←换乘 1 号线
-←To Line 1</div>
+        <div id="textInputWrapper" class="textInput-wrapper">
+          <div id="textInput" class="autoWidth" contenteditable="true">←换乘 1 号线 ←To Line 1</div>
+          <div id="highlightOverlay" class="highlightOverlay"></div>
+        </div>
+      </div>
+
+      <!-- Minecraft版本 -->
+      <div id="editionSection" class="config-item">
+        <label class="config-item-label">Minecraft版本</label>
+        <div class="config-item-content">
+          <label class="radio-option">
+            <input type="radio" class="edition" name="edition" value="je" checked />
+            <img src="edition-je.webp" alt="Java版" />
+            <span>Java版</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" class="edition" name="edition" value="be" />
+            <img src="edition-be.webp" alt="基岩版" />
+            <span>基岩版</span>
+          </label>
+        </div>
       </div>
 
       <!-- 告示牌类型 -->
@@ -24,12 +43,12 @@
         <label class="config-item-label">告示牌类型</label>
         <div class="config-item-content">
           <label class="radio-option">
-            <input type="radio" class="signType" name="signType" value="sign" checked onchange="main()" />
+            <input type="radio" class="signType" name="signType" value="sign" checked />
             <img src="signType-sign.webp" alt="告示牌" />
             <span>告示牌</span>
           </label>
           <label class="radio-option">
-            <input type="radio" class="signType" name="signType" value="hangingSign" onchange="main()" />
+            <input type="radio" class="signType" name="signType" value="hangingSign" />
             <img src="signType-hangingSign.webp" alt="悬挂式告示牌" />
             <span>悬挂式告示牌</span>
           </label>
@@ -57,16 +76,19 @@
               style="font-family: 'Fusion Pixel 8px Proportional', monospace;">Fusion Pixel 8px Proportional</div>
             <div class="custom-select-option" data-value="Fusion Pixel 8px Monospaced"
               style="font-family: 'Fusion Pixel 8px Monospaced', monospace;">Fusion Pixel 8px Monospaced</div>
-            <div class="custom-select-option" data-value="GuanZhi" style="font-family: 'GuanZhi', monospace;">GuanZhi
+            <div class="custom-select-option" data-value="GuanZhi 8px" style="font-family: 'GuanZhi 8px', monospace;">
+              GuanZhi 8px
             </div>
             <div class="custom-select-option" data-value="美績點陣體" style="font-family: '美績點陣體', monospace;">美績點陣體</div>
             <div class="custom-select-option" data-value="美績點陣體 - 明" style="font-family: '美績點陣體 - 明', monospace;">
               美績點陣體 - 明</div>
             <div class="custom-select-option" data-value="Five" style="font-family: 'Five', monospace;">Five</div>
-            <div class="custom-select-option" data-value="Mojang Regular" style="font-family: 'Mojang Regular', monospace;">Mojang Regular</div>
-            <div class="custom-select-option" data-value="Public Pixel" style="font-family: 'Public Pixel', monospace;">Public Pixel</div>
+            <div class="custom-select-option" data-value="Mojang Regular"
+              style="font-family: 'Mojang Regular', monospace;">Mojang Regular</div>
+            <div class="custom-select-option" data-value="Public Pixel" style="font-family: 'Public Pixel', monospace;">
+              Public Pixel</div>
             <div class="custom-select-option" data-value="袖珍像素体" style="font-family: '袖珍像素体', monospace;">袖珍像素体</div>
-            <div class="custom-select-divider"></div>
+
             <input id="fontCustomInput" class="custom-select-input" type="text" placeholder="输入自定义字体..." />
           </div>
         </div>
@@ -77,56 +99,86 @@
         <label class="config-item-label">字符模式</label>
         <div class="config-item-content">
           <label class="radio-option">
-            <input type="radio" onclick="setPattern('1.0')" class="patternSelect" name="patternSelect" value="1.0"
-              checked />
-            <span class="char-symbol">▞</span><span>1.0~1.19.4</span>
+            <input type="radio" class="patternSelect" name="patternSelect" value="1.0" checked />
+            <span class="char-symbol">▞</span><span>方块元素（1.0~1.19.4）</span>
           </label>
           <label class="radio-option">
-            <input type="radio" onclick="setPattern('1.20')" class="patternSelect" name="patternSelect" value="1.20" />
-            <span class="char-symbol">◛◚</span><span>1.20+</span>
+            <input type="radio" class="patternSelect" name="patternSelect" value="1.20" />
+            <span class="char-symbol">◛◚</span><span>方块元素（1.20+）</span>
           </label>
           <label class="radio-option">
-            <input type="radio" onclick="setPattern('1.20-wide')" class="patternSelect" name="patternSelect"
-              value="1.20-wide" />
-            <span class="char-symbol">▄▀</span><span>1.20+ 宽</span>
+            <input type="radio" class="patternSelect" name="patternSelect" value="1.20-wide" />
+            <span class="char-symbol">▄▀</span><span>方块元素 宽（1.20+）</span>
           </label>
           <label class="radio-option">
-            <input type="radio" onclick="setPattern('braille')" class="patternSelect" name="patternSelect"
-              value="braille" />
-            <span class="char-symbol">⣤⠛</span><span>盲文</span>
+            <input type="radio" class="patternSelect" name="patternSelect" value="braille" />
+            <span class="char-symbol">⣤⠛</span><span>盲文符号</span>
           </label>
           <label class="radio-option">
-            <input type="radio" onclick="togglePatternSection()" class="patternSelect" name="patternSelect"
-              value="custom" />
+            <input type="radio" class="patternSelect" name="patternSelect" value="custom" />
             <span>自定义</span>
           </label>
         </div>
         <div id="patternSection" class="custom-char-section">
+          <div class="canvas-width-row">
+            <label><span class="input-title">JE告示牌<br />横向像素数量</span> <input id="custom-pixelWidth-je-sign"
+                type="number" min="0" step="2" value="20" /></label>
+            <label><span class="input-title">JE悬挂式告示牌<br />横向像素数量</span> <input id="custom-pixelWidth-je-hangingSign"
+                type="number" min="0" step="2" value="12" /></label>
+            <label><span class="input-title">BE告示牌<br />横向像素数量</span> <input id="custom-pixelWidth-be-sign"
+                type="number" min="0" step="2" value="20" /></label>
+            <label><span class="input-title">BE悬挂式告示牌<br />横向像素数量</span> <input id="custom-pixelWidth-be-hangingSign"
+                type="number" min="0" step="2" value="12" /></label>
+          </div>
           <div id="patternWrapper"></div>
-          <button type="button" id="devModeBtn" class="dev-mode-btn" title="切换开发者模式 (Ctrl+D)">开发者模式</button>
           <template id="patternTemplate">
             <label>
-              <code></code>
+              <code class="input-title"></code>
               <input name="pattern" value="" />
             </label>
           </template>
         </div>
       </div>
 
-      <!-- Minecraft版本（仅盲文模式显示） -->
-      <div id="editionSection" class="config-item" style="display:none;">
-        <label class="config-item-label">Minecraft版本</label>
-        <div class="config-item-content">
-          <label class="radio-option">
-            <input type="radio" class="edition" name="edition" value="je" checked onchange="main()" />
-            <img src="edition-je.webp" alt="Java版" />
-            <span>Java版</span>
-          </label>
-          <label class="radio-option">
-            <input type="radio" class="edition" name="edition" value="be" onchange="main()" />
-            <img src="edition-be.webp" alt="基岩版" />
-            <span>基岩版</span>
-          </label>
+      <!-- 微调标题 -->
+      <div class="config-item">
+        <div id="adjustToggle" class="adjust-toggle">微调</div>
+      </div>
+
+      <!-- 微调面板 -->
+      <div id="adjustPanel" style="display:none;">
+        <div class="adjust-section">
+          <div class="adjust-params">
+            <div class="adjust-param">
+              <span class="input-title">横向偏移</span>
+              <input id="adjustOffsetX" class="adjust-input" type="number" min="-1" max="1" step="0.01" value="0" />
+            </div>
+            <div class="adjust-param" id="adjustOffsetYRow">
+              <span class="input-title">纵向偏移</span>
+              <input id="adjustOffsetY" class="adjust-input" type="number" min="-1" max="1" step="0.01" value="0" />
+            </div>
+            <div class="adjust-param">
+              <span class="input-title">阈值</span>
+              <input id="adjustThreshold" class="adjust-input" type="number" min="0" max="255" step="1" value="127" />
+            </div>
+            <div class="adjust-param adjust-param--plain">
+              <span class="input-title">&nbsp;</span>
+              <button id="adjustReset" class="adjust-btn">还原</button>
+            </div>
+          </div>
+          <div class="adjust-param">
+            <span class="input-title">自动更新绘制</span>
+            <div class="config-item-content">
+              <label class="radio-option">
+                <input type="radio" name="autoUpdate" value="on" />
+                <span>开启</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="autoUpdate" value="off" checked />
+                <span>关闭</span>
+              </label>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -137,44 +189,6 @@
     <div id="previewWrapper">
       <div>预览</div>
       <div id="canvasWrapper"></div>
-    </div>
-
-    <!-- DEBUG 面板（Ctrl+D 开关） -->
-    <div id="debugPanel" style="display:none;">
-      <div class="debug-section">
-        <div class="debug-params">
-          <div class="debug-param">
-            <span class="debug-pname">字体</span>
-            <span id="debugFontName">-</span>
-          </div>
-          <div class="debug-param">
-            <span class="debug-pname">offsetX</span>
-            <input id="debugOffsetX" type="number" step="0.01" value="0" style="width:60px;" />
-          </div>
-          <div class="debug-param" id="debugOffsetYRow">
-            <span class="debug-pname">offsetY</span>
-            <input id="debugOffsetY" type="number" step="0.01" value="0" style="width:60px;" />
-          </div>
-          <div class="debug-param" id="debugGridShiftRow" style="display:none;">
-            <span class="debug-pname">gridShift</span>
-            <input id="debugGridShift" type="number" step="0.1" value="2.7" style="width:60px;" />
-          </div>
-          <div class="debug-param">
-            <span class="debug-pname">模式</span>
-            <span id="debugMode">8×8</span>
-          </div>
-          <div class="debug-param">
-            <span class="debug-pname">cellW</span>
-            <input id="debugCellW" type="number" min="0.5" max="10" step="0.1" value="3.0" style="width:50px;" />
-          </div>
-          <div class="debug-param">
-            <span class="debug-pname">阈值</span>
-            <input id="debugThreshold" type="number" min="0" max="255" step="1" value="127" style="width:50px;" />
-            <span id="debugThresholdPreview" style="display:inline-block;width:16px;height:16px;margin-left:4px;vertical-align:middle;border:1px solid #999;"></span>
-          </div>
-        </div>
-        <button id="debugReset" class="debug-mode-btn">还原</button>
-      </div>
     </div>
 
     <div id="outputWrapper">

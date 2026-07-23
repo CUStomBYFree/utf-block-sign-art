@@ -36,32 +36,24 @@ const patterns = {
     },
   },
 };
-let pixelMapping;
-setPixelMapping(patterns["1.0"].pixelMapping);
+showPixelMapping(patterns["1.0"].pixelMapping);
 
-function togglePatternSection() {
-  const section = document.getElementById('patternSection');
+function showHidePatternCustomize() {
+  const section = document.querySelector('#patternSection');
   const customRadio = document.querySelector('.patternSelect[value="custom"]');
   section.classList.toggle('expanded', customRadio.checked);
-  const editionSection = document.getElementById("editionSection");
-  if (editionSection) editionSection.style.display = "none";
 }
 
 document.querySelectorAll('.patternSelect').forEach(radio => {
   radio.addEventListener('click', function () {
-    if (this.value !== 'custom') {
-      document.getElementById('patternSection').classList.remove('expanded');
+    if (this.value !== 'custom' && patterns[this.value]) {
+      showPixelMapping(patterns[this.value].pixelMapping);
     }
+    showHidePatternCustomize();
   });
 });
 
-function setPattern(patternName) {
-  setPixelMapping(patterns[patternName].pixelMapping);
-  const editionSection = document.getElementById("editionSection");
-  if (editionSection) editionSection.style.display = patternName === "braille" ? "" : "none";
-}
-
-function setPixelMapping(pixelMapping) {
+function showPixelMapping(pixelMapping) {
   const patternWrapper = document.querySelector("#patternWrapper");
   const patternTemplate = document.querySelector("#patternTemplate");
   patternWrapper.innerHTML = "";
@@ -84,4 +76,13 @@ function getPixelMapping() {
     result.push(input.value);
   });
   return result;
+}
+
+function getCustomCanvasWidth() {
+  return {
+    jeSign: parseInt(document.querySelector("#custom-pixelWidth-je-sign").value) ?? 20,
+    jeHangingSign: parseInt(document.querySelector("#custom-pixelWidth-je-hangingSign").value) ?? 12,
+    beSign: parseInt(document.querySelector("#custom-pixelWidth-be-sign").value) ?? 20,
+    beHangingSign: parseInt(document.querySelector("#custom-pixelWidth-be-hangingSign").value) ?? 12,
+  };
 }
