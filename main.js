@@ -11,11 +11,13 @@ const fontsToLoad = [
   '美績點陣體 - 明',
   'Public Pixel',
   '袖珍像素体',
+  'EmptyFallback',
 ];
 
 fontsToLoad.forEach(fontName => {
   document.fonts.load(`8px '${fontName}'`);
 });
+document.fonts.load(`1024px 'EmptyFallback'`);
 
 let selectedFont = 'Chill Bitmap 7px';
 let autoUpdate = false;
@@ -114,7 +116,8 @@ async function main() {
     ? (edition === "be" ? cw.beHangingSign : cw.jeHangingSign)
     : (edition === "be" ? cw.beSign : cw.jeSign);
 
-  const { overWidthChars, unsupportedChars } = getUnavailableChars(inputText, canvasWidth, selectedFont);
+  const overWidthChars = getOverWidthChars(inputText, canvasWidth, selectedFont);
+  const unsupportedChars = getUnsupportedChars(inputText, selectedFont);
   if (overWidthChars.size > 0) showToast('部分字符超出宽度，已跳过');
   if (unsupportedChars.size > 0) showToast('部分字符不在字体中，已跳过');
   const highlightChars = new Set([...overWidthChars, ...unsupportedChars]);
@@ -295,24 +298,50 @@ function text2canvases(text, canvasWidth, fontName, params, highlightChars) {
 }
 
 
-function getUnavailableChars(text, availableWidth, fontName) {
-  let tempCanvas = document.createElement("canvas");
-  let tempCtx = tempCanvas.getContext("2d");
-  tempCtx.font = `8px '${fontName}'`;
+function getUnsupportedChars(text, fontName) {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  ctx.font = `1024px '${fontName}', 'EmptyFallback'`;
 
-  let overWidthChars = new Set();
-  let unsupportedChars = new Set();
+  const unsupported = new Set();
   const unique = [...new Set(text.replace(/[\r\n]/g, ''))];
   for (const char of unique) {
     if (char === '\n') continue;
-    const charWidth = tempCtx.measureText(char).width;
-    if (charWidth > availableWidth) { overWidthChars.add(char); }
-    if (charWidth === 0 || (window._isGlyphSupported && !window._isGlyphSupported(fontName, char))) {
-      unsupportedChars.add(char);
+    const m = ctx.measureText(char);
+    const isEmptyFallback =
+      m.fontBoundingBoxAscent === 1024 &&
+      m.fontBoundingBoxDescent === 0 &&
+      m.actualBoundingBoxLeft === 1024 &&
+      m.actualBoundingBoxRight === 0 &&
+      m.actualBoundingBoxAscent === 0 &&
+      m.actualBoundingBoxDescent === 1024 &&
+      m.width === 1024;
+    console.log(`[font-check] "${char}" U+${char.codePointAt(0).toString(16).toUpperCase().padStart(4,'0')} ` +
+      `fontBB(${m.fontBoundingBoxAscent},${m.fontBoundingBoxDescent}) ` +
+      `actualBB(L=${m.actualBoundingBoxLeft},R=${m.actualBoundingBoxRight},A=${m.actualBoundingBoxAscent},D=${m.actualBoundingBoxDescent}) ` +
+      `w=${m.width} → ${isEmptyFallback ? 'UNSUPPORTED' : 'ok'}`);
+    if (isEmptyFallback) {
+      unsupported.add(char);
     }
   }
+  return unsupported;
+}
 
-  return { overWidthChars, unsupportedChars };
+function getOverWidthChars(text, availableWidth, fontName) {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  ctx.font = `8px '${fontName}'`;
+
+  const overWidth = new Set();
+  const unique = [...new Set(text.replace(/[\r\n]/g, ''))];
+  for (const char of unique) {
+    if (char === '\n') continue;
+    const charWidth = ctx.measureText(char).width;
+    if (charWidth > availableWidth) {
+      overWidth.add(char);
+    }
+  }
+  return overWidth;
 }
 
 
@@ -330,7 +359,8 @@ function syncHighlight(highlightChars) {
     const canvasWidth = signType === "hangingSign"
       ? (edition === "be" ? cw.beHangingSign : cw.jeHangingSign)
       : (edition === "be" ? cw.beSign : cw.jeSign);
-    const { overWidthChars, unsupportedChars } = getUnavailableChars(text, canvasWidth, selectedFont);
+    const overWidthChars = getOverWidthChars(text, canvasWidth, selectedFont);
+    const unsupportedChars = getUnsupportedChars(text, selectedFont);
     highlightChars = new Set([...overWidthChars, ...unsupportedChars]);
   }
   const text = div.innerText;

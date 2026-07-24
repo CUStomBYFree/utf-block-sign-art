@@ -80,4 +80,8 @@
   font-family: "袖珍像素体";
   src: url("XiuZhenXiangSuTi.ttf.woff2") format("woff2");
 }
+@font-face {
+  font-family: "EmptyFallback";
+  src: url("EmptyFallback.ttf.woff2") format("woff2");
+}
 
